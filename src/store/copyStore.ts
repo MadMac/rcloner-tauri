@@ -1,6 +1,10 @@
-import { reactive } from 'vue'
+import { reactive } from "vue";
 
 export const copyStore = reactive({
-	sourcePath: "",
-	destinationPath: ""
-})
+  sourcePath: "",
+  destinationPath: "",
+  dryRun: {
+    command: "",
+    output: "",
+  },
+});

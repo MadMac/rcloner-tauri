@@ -1,19 +1,25 @@
+import "@mdi/font/css/materialdesignicons.css";
 import { createApp } from "vue";
 import App from "./App.vue";
-import router from './router'
+import router from "./router";
 
 // Vuetify
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
+import "vuetify/styles";
+import { createVuetify } from "vuetify";
+import * as components from "vuetify/components";
+import * as directives from "vuetify/directives";
 
 const vuetify = createVuetify({
-	components,
-	directives,
-	theme: {
-		defaultTheme: 'light'
-	}
-})
+  components,
+  directives,
+  theme: {
+    defaultTheme: "light",
+  },
+  defaults: {
+    VBtn: {
+      variant: "flat",
+    },
+  },
+});
 
 createApp(App).use(router).use(vuetify).mount("#app");
