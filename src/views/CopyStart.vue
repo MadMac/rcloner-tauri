@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const startCopy = () => {
-  // TODO: Validate Paths
+  // TODO: Validate Paths in backend
   router.push("/copy/dry-run");
 };
 </script>
@@ -12,7 +12,7 @@ const startCopy = () => {
 <template>
   <v-container>
     <v-row class="ma-4">
-      <v-btn class="ma-2" @click="$router.push('/')"
+      <v-btn class="ma-2" @click="router.push('/')"
         ><v-icon>mdi-arrow-left</v-icon></v-btn
       >
       <h1>Copy</h1>

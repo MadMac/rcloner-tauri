@@ -7,4 +7,9 @@ export const copyStore = reactive({
     command: "",
     output: "",
   },
+  buildCopyCommand() {
+    return 'rclone copy "{sourcePath}" "{destinationPath}" --update --progress --dry-run'
+      .replace("{sourcePath}", this.sourcePath)
+      .replace("{destinationPath}", this.destinationPath);
+  },
 });
