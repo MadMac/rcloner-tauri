@@ -1,11 +1,42 @@
 <script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { copyStore } from "../store/copyStore.js";
 import { useRouter } from "vue-router";
+import { invoke } from "@tauri-apps/api/core";
 const router = useRouter();
+
+const timer = ref();
 
 const startDryRun = () => {
   console.log("Starting dry-run...");
+  invoke("run_rclone", {
+    fromPath: copyStore.sourcePath,
+    toPath: copyStore.destinationPath,
+  }).then((response) => {
+    console.log(response);
+  });
 };
+
+const getLogs = () => {
+  console.log("Getting logs...");
+  invoke("get_logs").then((response) => {
+    console.log(response);
+    copyStore.dryRun.output = response as string;
+  });
+};
+
+const stopDryRun = () => {
+  console.log("Stopping dry-run...");
+  invoke("stop_rclone").then((response) => {
+    console.log(response);
+  });
+};
+
+onMounted(() => {
+  timer.value = setInterval(() => {
+    getLogs();
+  }, 500);
+});
 </script>
 
 <template>
@@ -25,6 +56,9 @@ const startDryRun = () => {
     <v-row class="ma-4">
       <v-btn variant="flat" color="primary" @click="startDryRun()">
         Run dry-run
+      </v-btn>
+      <v-btn variant="flat" color="primary" @click="stopDryRun()">
+        Stop dry-run
       </v-btn>
     </v-row>
     <v-row class="ma-4">

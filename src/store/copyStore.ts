@@ -5,7 +5,8 @@ export const copyStore = reactive({
   destinationPath: "",
   dryRun: {
     command: "",
-    output: "",
+    output: "" as string,
+    started: false,
   },
   buildCopyCommand() {
     return 'rclone copy "{sourcePath}" "{destinationPath}" --update --progress --dry-run'
