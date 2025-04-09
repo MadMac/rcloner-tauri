@@ -22,21 +22,21 @@ fn run_rclone(from_path: &str, to_path: &str, state: State<'_, Mutex<DataHolder>
     // Spawn a new thread to run the rclone process
     state.rclone_thread = Some(thread::spawn(move || {
         // Start the rclone process
-        let process = Command::new("rclone")
+        let mut process = Command::new("rclone")
             .arg("copy")
             .arg("/home/mhallfors/Projects/TransferTest/Test1")
             .arg("/home/mhallfors/Projects/TransferTest/Test2")
-            // .arg("--dry-run")
+            .arg("--dry-run")
             .arg("--update")
             .arg("--progress")
             .arg("--bwlimit")
-            .arg("100K")
+            .arg("1000K")
             .stdout(Stdio::piped())
             .spawn()
             .expect("Failed to start rclone process");
 
         // Get the stdout of the process
-        let stdout = process.stdout.expect("Failed to capture stdout");
+        let stdout = process.stdout.take().expect("Failed to capture stdout");
         let reader = BufReader::new(stdout);
 
         // Read the output line by line and send it to the main thread
@@ -44,6 +44,13 @@ fn run_rclone(from_path: &str, to_path: &str, state: State<'_, Mutex<DataHolder>
             let line = line.expect("Failed to read line");
             tx.send(line).expect("Failed to send line");
         }
+
+        // Wait for the process to finish
+        let result = process.wait().expect("Failed to wait for rclone process");
+
+        // Optionally, send a message indicating the process has ended
+        tx.send(format!("Rclone process exited with status: {:?}", result))
+            .expect("Failed to send exit status");
     }));
 
     format!("Rclone started")
@@ -51,7 +58,7 @@ fn run_rclone(from_path: &str, to_path: &str, state: State<'_, Mutex<DataHolder>
 
 #[tauri::command]
 fn get_logs(state: State<'_, Mutex<DataHolder>>) -> String {
-    let state = state.lock().unwrap();
+    let mut state = state.lock().unwrap();
     if state.rec_channel.is_none() {
         return format!("No thread started");
     }
@@ -61,6 +68,18 @@ fn get_logs(state: State<'_, Mutex<DataHolder>>) -> String {
         println!("Line: {}", received);
         buffer.push_str(received.as_str());
         buffer.push_str("\n")
+    }
+
+    if buffer.contains("Rclone process exited with status") {
+        println!("Ending ended thread");
+        state
+            .rclone_thread
+            .take()
+            .unwrap()
+            .join()
+            .expect("Failed to join thread");
+        state.rclone_thread = None;
+        state.rec_channel = None;
     }
 
     return buffer;

@@ -14,21 +14,34 @@ const startDryRun = () => {
     toPath: copyStore.destinationPath,
   }).then((response) => {
     console.log(response);
+    copyStore.dryRun.started = true;
   });
 };
 
 const getLogs = () => {
-  console.log("Getting logs...");
-  invoke("get_logs").then((response) => {
-    console.log(response);
-    copyStore.dryRun.output = response as string;
-  });
+  if (copyStore.dryRun.started) {
+    console.log("Getting logs...");
+    invoke("get_logs").then((response) => {
+      const responseString = response as string;
+      console.log(responseString);
+      if (responseString.length > 0) {
+        console.log("add response");
+        copyStore.dryRun.output =
+          responseString + "\n" + copyStore.dryRun.output;
+        if (responseString.includes("Rclone process exited with status")) {
+          console.log("Rclone process exited");
+          copyStore.dryRun.started = false;
+        }
+      }
+    });
+  }
 };
 
 const stopDryRun = () => {
   console.log("Stopping dry-run...");
   invoke("stop_rclone").then((response) => {
     console.log(response);
+    copyStore.dryRun.started = false;
   });
 };
 
@@ -54,10 +67,20 @@ onMounted(() => {
       ></v-text-field>
     </v-row>
     <v-row class="ma-4">
-      <v-btn variant="flat" color="primary" @click="startDryRun()">
+      <v-btn
+        variant="flat"
+        color="primary"
+        @click="startDryRun()"
+        :disabled="copyStore.dryRun.started"
+      >
         Run dry-run
       </v-btn>
-      <v-btn variant="flat" color="primary" @click="stopDryRun()">
+      <v-btn
+        variant="flat"
+        color="primary"
+        @click="stopDryRun()"
+        :disabled="!copyStore.dryRun.started"
+      >
         Stop dry-run
       </v-btn>
     </v-row>

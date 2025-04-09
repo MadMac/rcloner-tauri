@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
+import { copyStore } from "../store/copyStore.js";
 const router = useRouter();
 
 const goToCopy = () => {
+  copyStore.dryRun = {
+    command: "",
+    output: "" as string,
+    started: false,
+  };
   router.push("/copy/start");
 };
 </script>
