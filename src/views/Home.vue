@@ -8,6 +8,7 @@ const goToCopy = () => {
     command: "",
     output: "" as string,
     started: false,
+    finished: false,
   };
   router.push("/copy/start");
 };
