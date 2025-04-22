@@ -1,10 +1,11 @@
+use log::debug;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::sync::Mutex;
 use std::thread;
-use tauri::{Builder, Manager, State};
+use tauri::{Manager, State};
 
 struct DataHolder {
     rclone_thread: Option<thread::JoinHandle<()>>,
@@ -14,7 +15,12 @@ struct DataHolder {
 // TODO: siirrä handle ylemmälle tasolle
 //
 #[tauri::command]
-fn run_rclone(from_path: &str, to_path: &str, state: State<'_, Mutex<DataHolder>>) -> String {
+fn run_rclone(
+    source_path: &str,
+    destination_path: &str,
+    dry_run: bool,
+    state: State<'_, Mutex<DataHolder>>,
+) -> String {
     println!("Comes here");
     let mut state = state.lock().unwrap();
     let (tx, rx) = mpsc::channel();
@@ -22,18 +28,26 @@ fn run_rclone(from_path: &str, to_path: &str, state: State<'_, Mutex<DataHolder>
     // Spawn a new thread to run the rclone process
     state.rclone_thread = Some(thread::spawn(move || {
         // Start the rclone process
-        let mut process = Command::new("rclone")
+        let mut process_command = Command::new("rclone");
+
+        process_command
             .arg("copy")
             .arg("/home/mhallfors/Projects/TransferTest/Test1")
             .arg("/home/mhallfors/Projects/TransferTest/Test2")
-            .arg("--dry-run")
             .arg("--update")
             .arg("--progress")
             .arg("--bwlimit")
-            .arg("1000K")
+            .arg("1000K");
+
+        if dry_run {
+            debug!("Running rclone in dry-run mode");
+            process_command.arg("--dry-run");
+        }
+
+        let mut process = process_command
             .stdout(Stdio::piped())
             .spawn()
-            .expect("Failed to start rclone process");
+            .expect("Failed to capture stdout");
 
         // Get the stdout of the process
         let stdout = process.stdout.take().expect("Failed to capture stdout");
@@ -105,6 +119,8 @@ fn stop_rclone(state: State<'_, Mutex<DataHolder>>) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    env_logger::init_from_env(env_logger::Env::default().default_filter_or("debug"));
+
     let init_data: DataHolder = DataHolder {
         rclone_thread: None,
         rec_channel: None,

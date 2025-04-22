@@ -12,8 +12,9 @@ const startDryRun = () => {
   copyStore.dryRun.output = "";
   copyStore.dryRun.finished = false;
   invoke("run_rclone", {
-    fromPath: copyStore.sourcePath,
-    toPath: copyStore.destinationPath,
+    sourcePath: copyStore.sourcePath,
+    destinationPath: copyStore.destinationPath,
+    dryRun: true
   }).then((response) => {
     console.log(response);
     copyStore.dryRun.started = true;
@@ -72,10 +73,12 @@ onMounted(() => {
       <v-btn variant="flat" color="primary" @click="startDryRun()" :disabled="copyStore.dryRun.started">
         Run dry-run
       </v-btn>
-      <v-btn variant="flat" color="primary" @click="stopDryRun()" :disabled="!copyStore.dryRun.started" class="button-left-margin">
+      <v-btn variant="flat" color="primary" @click="stopDryRun()" :disabled="!copyStore.dryRun.started"
+        class="button-left-margin">
         Stop dry-run
       </v-btn>
-      <v-btn variant="flat" color="green" @click="startCopyCommand()" :disabled="!copyStore.dryRun.finished" class="button-left-margin">
+      <v-btn variant="flat" color="green" @click="startCopyCommand()" :disabled="!copyStore.dryRun.finished"
+        class="button-left-margin">
         Run Copy
       </v-btn>
     </v-row>
