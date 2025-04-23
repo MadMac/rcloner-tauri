@@ -1,7 +1,7 @@
 <template>
-  <main class="container">
-    <RouterView />
-  </main>
+    <main class="container">
+        <RouterView />
+    </main>
 </template>
 
 <style scoped></style>
