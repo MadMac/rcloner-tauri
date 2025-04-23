@@ -3,6 +3,8 @@ import { reactive } from "vue";
 export const copyStore = reactive({
   sourcePath: "",
   destinationPath: "",
+  sourceError: false,
+  destinationError: false,
   dryRun: {
     command: "",
     output: "" as string,

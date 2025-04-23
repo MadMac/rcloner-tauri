@@ -117,6 +117,16 @@ fn stop_rclone(state: State<'_, Mutex<DataHolder>>) -> String {
     format!("Rclone stopped")
 }
 
+#[tauri::command]
+fn check_if_path_exists(path: String) -> bool {
+    if path.starts_with("Nextcloud") {
+        // Doesn't validate Nextcloud URL for now
+        return true;
+    }
+
+    return std::path::Path::new(&path).exists();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("debug"));
@@ -132,7 +142,12 @@ pub fn run() {
             app.manage(Mutex::new(init_data));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![run_rclone, get_logs, stop_rclone])
+        .invoke_handler(tauri::generate_handler![
+            run_rclone,
+            get_logs,
+            stop_rclone,
+            check_if_path_exists
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
