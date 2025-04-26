@@ -73,7 +73,7 @@ const checkPathExists = async (path: string) => {
             ></v-text-field>
         </v-row>
         <v-row class="ma-4">
-            <v-btn color="primary" @click="startCopy"> Start Copy </v-btn>
+            <v-btn color="primary" @click="startCopy">Start Copy</v-btn>
         </v-row>
     </v-container>
 </template>

@@ -12,12 +12,10 @@ struct DataHolder {
     rec_channel: Option<Receiver<String>>,
 }
 
-// TODO: siirrä handle ylemmälle tasolle
-//
 #[tauri::command]
 fn run_rclone(
-    source_path: &str,
-    destination_path: &str,
+    source_path: String,
+    destination_path: String,
     dry_run: bool,
     state: State<'_, Mutex<DataHolder>>,
 ) -> String {
@@ -25,6 +23,10 @@ fn run_rclone(
     let mut state = state.lock().unwrap();
     let (tx, rx) = mpsc::channel();
     state.rec_channel = Some(rx);
+
+    debug!("Source: {}", source_path);
+    debug!("Destination: {}", destination_path);
+
     // Spawn a new thread to run the rclone process
     state.rclone_thread = Some(thread::spawn(move || {
         // Start the rclone process
@@ -32,8 +34,8 @@ fn run_rclone(
 
         process_command
             .arg("copy")
-            .arg("/home/mhallfors/Projects/TransferTest/Test1")
-            .arg("/home/mhallfors/Projects/TransferTest/Test2")
+            .arg(source_path)
+            .arg(destination_path)
             .arg("--update")
             .arg("--progress")
             .arg("--bwlimit")

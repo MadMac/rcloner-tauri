@@ -62,20 +62,16 @@ onMounted(() => {
 <template>
     <v-container class="h-screen">
         <v-row class="ma-4">
-            <v-btn class="ma-2" variant="flat"
-                @click="router.push('/copy/start')"><v-icon>mdi-arrow-left</v-icon></v-btn>
+            <v-btn class="ma-2" variant="flat" @click="router.push('/copy/start')"><v-icon>mdi-arrow-left</v-icon></v-btn>
             <h1>Copy Dry-run</h1>
         </v-row>
         <v-row class="ma-4">
             <v-text-field :placeholder="copyStore.buildCopyDryRunCommand()" readonly></v-text-field>
         </v-row>
         <v-row class="ma-4">
-            <v-btn variant="flat" color="primary" @click="startDryRun()" :disabled="copyStore.dryRun.started"> Run
-                dry-run </v-btn>
-            <v-btn variant="flat" color="primary" @click="stopDryRun()" :disabled="!copyStore.dryRun.started"
-                class="button-left-margin"> Stop dry-run </v-btn>
-            <v-btn variant="flat" color="green" @click="startCopyCommand()" :disabled="!copyStore.dryRun.finished"
-                class="button-left-margin"> Run Copy </v-btn>
+            <v-btn variant="flat" color="primary" @click="startDryRun()" :disabled="copyStore.dryRun.started">Run dry-run</v-btn>
+            <v-btn variant="flat" color="primary" @click="stopDryRun()" :disabled="!copyStore.dryRun.started" class="button-left-margin">Stop dry-run</v-btn>
+            <v-btn variant="flat" color="green" @click="startCopyCommand()" :disabled="!copyStore.dryRun.finished" class="button-left-margin">Run Copy</v-btn>
         </v-row>
         <v-row class="ma-4 h-50">
             <v-textarea label="Dry-run output" v-model="copyStore.dryRun.output" readonly></v-textarea>
