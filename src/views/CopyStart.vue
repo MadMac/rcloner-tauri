@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import { onMounted } from "vue";
 import { copyStore } from "../store/copyStore.js";
 import { useRouter } from "vue-router";
 import { invoke } from "@tauri-apps/api/core";
 const router = useRouter();
+
+onMounted(() => {
+    copyStore.sourceError = false;
+    copyStore.destinationError = false;
+});
 
 const startCopy = () => {
     const sourcePromise = checkPathExists(copyStore.sourcePath);
@@ -47,9 +53,7 @@ const checkPathExists = async (path: string) => {
 <template>
     <v-container>
         <v-row class="ma-4">
-            <v-btn class="ma-2" @click="router.push('/')"
-                ><v-icon>mdi-arrow-left</v-icon></v-btn
-            >
+            <v-btn class="ma-2" @click="router.push('/')"><v-icon>mdi-arrow-left</v-icon></v-btn>
             <h1>Copy</h1>
         </v-row>
         <v-row class="ma-4">
@@ -57,9 +61,7 @@ const checkPathExists = async (path: string) => {
                 label="Source"
                 v-model="copyStore.sourcePath"
                 :error="copyStore.sourceError"
-                :error-messages="
-                    copyStore.sourceError ? ['Path does not exist'] : []
-                "
+                :error-messages="copyStore.sourceError ? ['Path does not exist'] : []"
             ></v-text-field>
         </v-row>
         <v-row class="ma-4">
@@ -67,9 +69,7 @@ const checkPathExists = async (path: string) => {
                 label="Destination"
                 v-model="copyStore.destinationPath"
                 :error="copyStore.destinationError"
-                :error-messages="
-                    copyStore.destinationError ? ['Path does not exist'] : []
-                "
+                :error-messages="copyStore.destinationError ? ['Path does not exist'] : []"
             ></v-text-field>
         </v-row>
         <v-row class="ma-4">
