@@ -37,9 +37,7 @@ fn run_rclone(
             .arg(source_path)
             .arg(destination_path)
             .arg("--update")
-            .arg("--progress")
-            .arg("--bwlimit")
-            .arg("1000K");
+            .arg("--progress");
 
         if dry_run {
             debug!("Running rclone in dry-run mode");
