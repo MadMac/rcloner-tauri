@@ -1,4 +1,10 @@
+use chrono::Local;
 use log::debug;
+use std::fs::create_dir_all;
+use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::Error;
+use std::io::{self, Write};
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::sync::mpsc;
@@ -6,10 +12,12 @@ use std::sync::mpsc::Receiver;
 use std::sync::Mutex;
 use std::thread;
 use tauri::{Manager, State};
+use uuid::Uuid;
 
 struct DataHolder {
     rclone_thread: Option<thread::JoinHandle<()>>,
     rec_channel: Option<Receiver<String>>,
+    run_id: Option<String>,
 }
 
 #[tauri::command]
@@ -67,7 +75,58 @@ fn run_rclone(
             .expect("Failed to send exit status");
     }));
 
+    state.run_id = Some(get_filename(dry_run));
+    match create_empty_file(state.run_id.as_ref().unwrap()) {
+        Ok(_) => println!(
+            "File '{}' created successfully.",
+            state.run_id.as_ref().unwrap()
+        ),
+        Err(e) => eprintln!(
+            "Failed to create file '{}': {}",
+            state.run_id.as_ref().unwrap(),
+            e
+        ),
+    }
+
     format!("Rclone started")
+}
+
+fn get_filename(dry_run: bool) -> String {
+    let now = Local::now();
+    let date_str = now.format("%Y-%m-%d-%H-%M-%S").to_string();
+    let uuid = Uuid::new_v4();
+    let uuid_str = uuid.to_string();
+    let uuid_prefix = &uuid_str[..5];
+    if dry_run {
+        return format!("{}_{}_dry_run.txt", date_str, uuid_prefix);
+    }
+    format!("{}_{}.txt", date_str, uuid_prefix)
+}
+
+fn create_folder_if_not_exists(folder_path: &str) -> io::Result<()> {
+    // Create the folder and any necessary parent directories
+    create_dir_all(folder_path)?;
+    Ok(())
+}
+
+fn create_empty_file(file_path: &str) -> Result<(), Error> {
+    // Create a new file, returning an error if it fails
+    create_folder_if_not_exists("logs")?;
+    File::create(format!("{}/{}", "logs", file_path))?;
+    Ok(())
+}
+
+fn append_to_file(file_path: String, content: String) -> io::Result<()> {
+    // Open the file in append mode
+    let mut file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(format!("{}/{}", "logs", file_path))?;
+
+    // Write the content to the file
+    writeln!(file, "{}", content)?;
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -84,6 +143,11 @@ fn get_logs(state: State<'_, Mutex<DataHolder>>) -> String {
         buffer.push_str("\n")
     }
 
+    match append_to_file(state.run_id.as_ref().unwrap().clone(), buffer.clone()) {
+        Ok(_) => println!("Content appended successfully."),
+        Err(e) => eprintln!("Failed to append content: {}", e),
+    }
+
     if buffer.contains("Rclone process exited with status") {
         println!("Ending ended thread");
         state
@@ -94,6 +158,7 @@ fn get_logs(state: State<'_, Mutex<DataHolder>>) -> String {
             .expect("Failed to join thread");
         state.rclone_thread = None;
         state.rec_channel = None;
+        state.run_id = None;
     }
 
     return buffer;
@@ -114,6 +179,7 @@ fn stop_rclone(state: State<'_, Mutex<DataHolder>>) -> String {
         .expect("Failed to join thread");
     state.rclone_thread = None;
     state.rec_channel = None;
+    state.run_id = None;
     format!("Rclone stopped")
 }
 
@@ -134,6 +200,7 @@ pub fn run() {
     let init_data: DataHolder = DataHolder {
         rclone_thread: None,
         rec_channel: None,
+        run_id: None,
     };
 
     tauri::Builder::default()
